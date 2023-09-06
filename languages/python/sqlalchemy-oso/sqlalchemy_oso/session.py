@@ -23,8 +23,7 @@ class _OsoSession:
     @classmethod
     def get(cls) -> Session:
         session = cls._get()  # type: ignore
-        new_session = Session(bind=session.bind)
-        return new_session
+        return Session(bind=session.bind)
 
     @classmethod
     def set_get_session(cls, get_session: Callable[[], Session]) -> None:

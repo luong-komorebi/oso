@@ -48,9 +48,7 @@ class Polar:
         plan = lib.polar_build_filter_plan(self.ptr, typs, prs, var, class_tag)
         process_messages(self.next_message)
         filter_plan_str = read_c_str(check_result(plan))
-        filter_plan = json.loads(filter_plan_str)
-        # @TODO(Steve): Decode Filter Plan to not just json?
-        return filter_plan
+        return json.loads(filter_plan_str)
 
     def build_data_filter(self, types, partial_results, variable, class_tag):
         """Get a filterplan for data filtering."""
@@ -62,9 +60,7 @@ class Polar:
         plan = lib.polar_build_data_filter(self.ptr, typs, prs, var, class_tag)
         process_messages(self.next_message)
         filter_plan_str = read_c_str(check_result(plan))
-        filter_plan = json.loads(filter_plan_str)
-        # @TODO(Steve): Decode Filter Plan to not just json?
-        return filter_plan
+        return json.loads(filter_plan_str)
 
     def load(self, sources: List[PolarSource]):
         """Load Polar policies."""
@@ -95,9 +91,7 @@ class Polar:
     def next_inline_query(self):
         q = lib.polar_next_inline_query(self.ptr, 0)
         self.process_messages()
-        if is_null(q):
-            return None
-        return Query(q)
+        return None if is_null(q) else Query(q)
 
     def register_constant(self, value, name):
         name = to_c_str(name)
@@ -218,11 +212,10 @@ def check_result(result, enrich_message=None):
     lib.result_free(ffi.cast("polar_CResult_c_void *", result))
     if is_null(e):
         return r
-    else:
-        assert is_null(r), "internal error: result pointer must be null"
-        error_str = read_c_str(e)
-        error = get_python_error(error_str, enrich_message)
-        raise error
+    assert is_null(r), "internal error: result pointer must be null"
+    error_str = read_c_str(e)
+    error = get_python_error(error_str, enrich_message)
+    raise error
 
 
 def is_null(result):

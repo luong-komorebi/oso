@@ -105,14 +105,13 @@ class Polar:
     def check_inline_queries(self) -> None:
         while True:
             query = self.ffi_polar.next_inline_query()
-            if query is None:  # Load is done
+            if query is None:
                 break
-            else:
-                try:
-                    next(Query(query, host=self.host.copy()).run())
-                except StopIteration:
-                    source = query.source()
-                    raise InlineQueryFailedError(source)
+            try:
+                next(Query(query, host=self.host.copy()).run())
+            except StopIteration:
+                source = query.source()
+                raise InlineQueryFailedError(source)
 
     def clear_rules(self) -> None:
         self.ffi_polar.clear_rules()
@@ -197,7 +196,7 @@ class Polar:
 
         while True:
             try:
-                query = input(FG_BLUE + "query> " + RESET).strip(";")
+                query = input(f"{FG_BLUE}query> {RESET}").strip(";")
             except (EOFError, KeyboardInterrupt):
                 return
             try:
@@ -216,7 +215,7 @@ class Polar:
                     bindings = res["bindings"]
                     if bindings:
                         for variable, value in bindings.items():
-                            print(variable + " = " + repr(value))
+                            print(f"{variable} = {repr(value)}")
                     else:
                         print(True)
             except PolarRuntimeError as e:

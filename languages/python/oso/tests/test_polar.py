@@ -94,6 +94,7 @@ def test_clear_rules(polar, query):
 
 
 def test_external(polar, qvar, qeval):
+
     class Bar:
         def y(self):
             return "y"
@@ -136,9 +137,9 @@ def test_external(polar, qvar, qeval):
         exceptions.InvalidCallError, match="tried to call 'a' but it is not callable"
     ):
         assert not qeval("new Foo().a() = x")
-    assert not qvar("new Foo().b = x", "x", one=True) == "b"
+    assert qvar("new Foo().b = x", "x", one=True) != "b"
     assert qvar("new Foo().b() = x", "x", one=True) == "b"
-    assert not qvar("Foo.c = x", "x", one=True) == "c"
+    assert qvar("Foo.c = x", "x", one=True) != "c"
     assert qvar("Foo.c() = x", "x", one=True) == "c"
     assert qvar("new Foo() = f and f.a = x", "x", one=True) == "a"
     assert qvar("new Foo().bar().y() = x", "x", one=True) == "y"
@@ -575,14 +576,16 @@ def test_in(polar, qeval):
 
 
 def test_unify(polar, qeval):
+
+
+
     class Foo:
         def __init__(self, foo):
             self.foo = foo
 
         def __eq__(self, other):
-            if isinstance(other, Foo):
-                return self.foo == other.foo
-            return False
+            return self.foo == other.foo if isinstance(other, Foo) else False
+
 
     polar.register_class(Foo)
 
@@ -776,10 +779,7 @@ def test_method_with_kwargs(polar, qvar):
 def unwrap_and(x):
     assert isinstance(x, Expression)
     assert x.operator == "And"
-    if len(x.args) == 1:
-        return x.args[0]
-    else:
-        return x.args
+    return x.args[0] if len(x.args) == 1 else x.args
 
 
 def test_partial_unification(polar):

@@ -17,8 +17,8 @@ class DjangoOsoConfig(AppConfig):
     name = "django_oso"
 
     def ready(self):
-        loaded_files = init_oso()
         if OSO_RELOAD_SERVER:
+            loaded_files = init_oso()
             autoreload_started.connect(
                 functools.partial(watch_files, files=loaded_files), weak=False
             )

@@ -43,8 +43,7 @@ class PathMapper:
         self.pattern = re.compile(f"^{template}$")
 
     def map(self, string):
-        match = self.pattern.match(string)
-        if match:
+        if match := self.pattern.match(string):
             return match.groupdict()
 
 
@@ -114,10 +113,7 @@ class Company:
     default_role: str = ""
 
     def role(self, actor: User):
-        if actor.name == "president":
-            return "admin"
-        else:
-            return "guest"
+        return "admin" if actor.name == "president" else "guest"
 
     def roles(self):
         yield "guest"

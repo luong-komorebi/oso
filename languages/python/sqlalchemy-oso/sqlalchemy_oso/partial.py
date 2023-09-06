@@ -111,10 +111,7 @@ def flip_op(operator: str) -> str:
 def and_filter(current, new):
     if isinstance(current, bool):
         current = sql.true() if current else sql.false()
-    if isinstance(current, True_):
-        return new
-    else:
-        return current & new
+    return new if isinstance(current, True_) else current & new
 
 
 def partial_to_filter(expression: Expression, session: Session, model, get_model):
@@ -180,8 +177,7 @@ def translate_isa(expression: Expression, session: Session, model, get_model):
     """
     assert expression.operator == "Isa"
     left, right = expression.args
-    left_path = dot_path(left)
-    if left_path:
+    if left_path := dot_path(left):
         assert left_path[0] == Variable("_this")
         left_path = left_path[1:]  # Drop _this.
         for field_name in left_path:
@@ -331,14 +327,14 @@ def translate_dot(path: Tuple[str, ...], session: Session, model, func: EmitFunc
     the result of ``func``.
     """
 
-    if len(path) == 0:
+    if not path:
         return func(session, model)
-    else:
-        property, model, is_multi_valued = get_relationship(model, path[0])
-        if not is_multi_valued:
-            return property.has(translate_dot(path[1:], session, model, func))
-        else:
-            return property.any(translate_dot(path[1:], session, model, func))
+    property, model, is_multi_valued = get_relationship(model, path[0])
+    return (
+        property.has(translate_dot(path[1:], session, model, func))
+        if not is_multi_valued
+        else property.any(translate_dot(path[1:], session, model, func))
+    )
 
 
 def get_relationship(model: type, field_name: str):

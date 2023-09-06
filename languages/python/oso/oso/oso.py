@@ -172,7 +172,9 @@ class Oso(Polar):
         for result in results:
             action = result.get("bindings").get("action")
             if isinstance(action, Variable):
-                if not allow_wildcard:
+                if allow_wildcard:
+                    return {"*"}
+                else:
                     raise exceptions.OsoError(
                         """The result of authorized_actions() contained an
                         "unconstrained" action that could represent any
@@ -180,8 +182,6 @@ class Oso(Polar):
                         set allow_wildcard to True and compare with the "*"
                         string."""
                     )
-                else:
-                    return {"*"}
             actions.add(action)
 
         return actions
@@ -238,7 +238,9 @@ class Oso(Polar):
         for result in results:
             field = result.get("bindings").get("field")
             if isinstance(field, Variable):
-                if not allow_wildcard:
+                if allow_wildcard:
+                    return {"*"}
+                else:
                     raise exceptions.OsoError(
                         """The result of authorized_fields() contained an
                         "unconstrained" field that could represent any
@@ -246,8 +248,6 @@ class Oso(Polar):
                         set allow_wildcard to True and compare with the "*"
                         string."""
                     )
-                else:
-                    return {"*"}
             fields.add(field)
 
         return fields

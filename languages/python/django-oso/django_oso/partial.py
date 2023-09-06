@@ -159,75 +159,65 @@ class FilterBuilder:
             left, right = right, left
             left_path, right_path = right_path, left_path
 
-        left_field = "__".join(left_path[1:]) if left_path[1:] else "pk"
-
         if left_path and right_path:
             raise UnsupportedError(f"Unsupported partial expression: {expr}")
-            # compare partials
-            # self.add_filter(COMPARISONS[expr.operator](
-            #     left_field, self.translate_path_to_field(right_path)
-            # ))
-        else:
-            # partial cmp grounded
-            assert left_path
-            if isinstance(right, Model):
-                right = right.pk
-            self.add_filter(COMPARISONS[expr.operator](left_field, right))
+        # partial cmp grounded
+        assert left_path
+        if isinstance(right, Model):
+            right = right.pk
+        left_field = "__".join(left_path[1:]) if left_path[1:] else "pk"
+
+        self.add_filter(COMPARISONS[expr.operator](left_field, right))
 
     def in_expr(self, expr: Expression):
         assert expr.operator == "In"
         (left, right) = expr.args
         right_path = dot_path(right)
 
-        if left == "_this" and right_path:
-            if right_path[1:]:
-                # _this in _this.foo.bar
-                # _this in _some_var.foo.bar
-                path = self.translate_path_to_field(right_path)
-                # path = "__".join(right_path[1:])
-                self.add_filter(COMPARISONS["Unify"]("pk", path))
-            else:
-                # _this in _this
-                # _this in _some_var
-                raise UnsupportedError(f"Unsupported partial expression: {expr}")
+        if left == "_this" and right_path and right_path[1:]:
+            # _this in _this.foo.bar
+            # _this in _some_var.foo.bar
+            path = self.translate_path_to_field(right_path)
+            # path = "__".join(right_path[1:])
+            self.add_filter(COMPARISONS["Unify"]("pk", path))
+        elif (
+            left == "_this"
+            and right_path
+            or isinstance(left, Variable)
+            and right_path
+            and not right_path[1:]
+        ):
+            # _this in _this
+            # _this in _some_var
+            raise UnsupportedError(f"Unsupported partial expression: {expr}")
         elif isinstance(left, Variable) and right_path:
-            if right_path[1:]:
-                # var in _this.foo.bar
-                # var in other_var.foo.bar
+            # var in _this.foo.bar
+            # var in other_var.foo.bar
 
-                # get the base query for the RHS of the `in`
-                root = self
-                while root.parent:
-                    root = root.parent
-                base_query = root.get_query_from_var(right_path[0]) or root
+            # get the base query for the RHS of the `in`
+            root = self
+            while root.parent:
+                root = root.parent
+            base_query = root.get_query_from_var(right_path[0]) or root
 
                 # Left is a variable => apply constraints to the subquery.
-                if left not in base_query.variables:
-                    subquery_path = right_path[1:]
-                    model = get_model_by_path(base_query.model, subquery_path)
-                    base_query.variables[left] = FilterBuilder(
-                        model, parent=base_query, name=left
-                    )
-                else:
-                    # This means we have two paths for the same variable
-                    # the subquery will handle the intersection
-                    pass
+            if left not in base_query.variables:
+                subquery_path = right_path[1:]
+                model = get_model_by_path(base_query.model, subquery_path)
+                base_query.variables[left] = FilterBuilder(
+                    model, parent=base_query, name=left
+                )
+            # Get the model for the subfield
 
-                # Get the model for the subfield
-
-                subquery = base_query.variables[left]
-                # <var> in <partial>
-                # => set up <var> as a new filtered query over the model
-                # filtered to the entries of right_path
-                path = base_query.translate_path_to_field(right_path)
-                field = OuterRef(path.name) if isinstance(path, F) else OuterRef(path)
-                subquery.filter &= COMPARISONS["Unify"]("pk", field)
-                # Maybe redundant, but want to be sure
-                base_query.variables[left] = subquery
-            else:
-                # var in _this
-                # var in other_var
-                raise UnsupportedError(f"Unsupported partial expression: {expr}")
+            subquery = base_query.variables[left]
+            # <var> in <partial>
+            # => set up <var> as a new filtered query over the model
+            # filtered to the entries of right_path
+            path = base_query.translate_path_to_field(right_path)
+            field = OuterRef(path.name) if isinstance(path, F) else OuterRef(path)
+            subquery.filter &= COMPARISONS["Unify"]("pk", field)
+            # Maybe redundant, but want to be sure
+            base_query.variables[left] = subquery
         else:
             # <value> in <partial>
             self.add_filter(COMPARISONS["Unify"]("__".join(right_path[1:]), left))

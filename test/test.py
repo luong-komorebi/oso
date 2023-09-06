@@ -73,7 +73,7 @@ oso.load_str("?= x = 1 and E.sum([x, 2, x]) = 4 and [3, 2, x].index(1) = 2;")
 
 oso.clear_rules()
 
-polar_file = os.path.dirname(os.path.realpath(__file__)) + "/test.polar"
+polar_file = f"{os.path.dirname(os.path.realpath(__file__))}/test.polar"
 oso.load_file(polar_file)
 
 assert oso.is_allowed("a", "b", "c")

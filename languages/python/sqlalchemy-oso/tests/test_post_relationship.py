@@ -184,7 +184,7 @@ def tag_test_fixture(session):
     # HACK!
     objects = {}
     for (name, local) in locals().items():
-        if name != "session" and name != "objects":
+        if name not in ["session", "objects"]:
             session.add(local)
 
         objects[name] = local
@@ -213,7 +213,7 @@ def test_in_multiple_attribute_relationship(session, oso, tag_test_fixture):
     assert tag_test_fixture["user_public_post"] in posts
     assert tag_test_fixture["user_private_post"] in posts
     assert tag_test_fixture["other_user_public_post"] in posts
-    assert not tag_test_fixture["other_user_private_post"] in posts
+    assert tag_test_fixture["other_user_private_post"] not in posts
     assert tag_test_fixture["other_user_random_post"] in posts
     assert tag_test_fixture["other_user_foo_post"] in posts
     assert posts.count() == 5
@@ -260,7 +260,7 @@ def tag_nested_test_fixture(session):
     # HACK!
     objects = {}
     for (name, local) in locals().items():
-        if name != "session" and name != "objects":
+        if name not in ["session", "objects"]:
             session.add(local)
 
         objects[name] = local
@@ -290,8 +290,8 @@ def test_nested_relationship_many_single(session, oso, tag_nested_test_fixture):
     )
     assert tag_nested_test_fixture["user_eng_post"] in posts
     assert tag_nested_test_fixture["user_user_post"] in posts
-    assert not tag_nested_test_fixture["random_post"] in posts
-    assert not tag_nested_test_fixture["not_tagged_post"] in posts
+    assert tag_nested_test_fixture["random_post"] not in posts
+    assert tag_nested_test_fixture["not_tagged_post"] not in posts
     assert tag_nested_test_fixture["all_tagged_post"] in posts
     assert posts.count() == 3
 
@@ -300,10 +300,10 @@ def test_nested_relationship_many_single(session, oso, tag_nested_test_fixture):
             oso, tag_nested_test_fixture["other_user"], "read", session, Post
         )
     )
-    assert not tag_nested_test_fixture["user_eng_post"] in posts
-    assert not tag_nested_test_fixture["user_user_post"] in posts
+    assert tag_nested_test_fixture["user_eng_post"] not in posts
+    assert tag_nested_test_fixture["user_user_post"] not in posts
     assert tag_nested_test_fixture["random_post"] in posts
-    assert not tag_nested_test_fixture["not_tagged_post"] in posts
+    assert tag_nested_test_fixture["not_tagged_post"] not in posts
     assert tag_nested_test_fixture["all_tagged_post"] in posts
     assert posts.count() == 2
 
@@ -358,7 +358,7 @@ def tag_nested_many_many_test_fixture(session):
     # HACK!
     objects = {}
     for (name, local) in locals().items():
-        if name != "session" and name != "objects":
+        if name not in ["session", "objects"]:
             session.add(local)
 
         objects[name] = local
@@ -399,8 +399,8 @@ def test_nested_relationship_many_many(session, oso, tag_nested_many_many_test_f
     )
     assert tag_nested_many_many_test_fixture["user_eng_post"] in posts
     assert tag_nested_many_many_test_fixture["user_user_post"] in posts
-    assert not tag_nested_many_many_test_fixture["random_post"] in posts
-    assert not tag_nested_many_many_test_fixture["not_tagged_post"] in posts
+    assert tag_nested_many_many_test_fixture["random_post"] not in posts
+    assert tag_nested_many_many_test_fixture["not_tagged_post"] not in posts
     assert tag_nested_many_many_test_fixture["all_tagged_post"] in posts
 
     posts = session.query(Post).filter(
@@ -408,10 +408,10 @@ def test_nested_relationship_many_many(session, oso, tag_nested_many_many_test_f
             oso, tag_nested_many_many_test_fixture["other_user"], "read", session, Post
         )
     )
-    assert not tag_nested_many_many_test_fixture["user_eng_post"] in posts
-    assert not tag_nested_many_many_test_fixture["user_user_post"] in posts
+    assert tag_nested_many_many_test_fixture["user_eng_post"] not in posts
+    assert tag_nested_many_many_test_fixture["user_user_post"] not in posts
     assert tag_nested_many_many_test_fixture["random_post"] in posts
-    assert not tag_nested_many_many_test_fixture["not_tagged_post"] in posts
+    assert tag_nested_many_many_test_fixture["not_tagged_post"] not in posts
     assert tag_nested_many_many_test_fixture["all_tagged_post"] in posts
 
 
@@ -438,8 +438,8 @@ def test_nested_relationship_many_many_constrained(
     )
     assert tag_nested_many_many_test_fixture["user_eng_post"] in posts
     assert tag_nested_many_many_test_fixture["user_user_post"] in posts
-    assert not tag_nested_many_many_test_fixture["random_post"] in posts
-    assert not tag_nested_many_many_test_fixture["not_tagged_post"] in posts
+    assert tag_nested_many_many_test_fixture["random_post"] not in posts
+    assert tag_nested_many_many_test_fixture["not_tagged_post"] not in posts
     assert tag_nested_many_many_test_fixture["all_tagged_post"] in posts
 
 
@@ -613,13 +613,7 @@ def test_empty_constraints_in(session, oso, tag_nested_many_many_test_fixture):
         authorize_model(oso, user, "read", session, Post)
     )
 
-    if USING_SQLAlchemy_v1_3:
-        true_clause = ""
-    else:
-        # NOTE(gj): The trivial TRUE constraint is not compiled away in
-        # SQLAlchemy 1.4.
-        true_clause = " AND 1 = 1"
-
+    true_clause = "" if USING_SQLAlchemy_v1_3 else " AND 1 = 1"
     assert str(posts) == (
         "SELECT posts.id AS posts_id, posts.contents AS posts_contents, posts.title AS"
         + " posts_title, posts.access_level AS posts_access_level,"

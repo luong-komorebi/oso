@@ -24,7 +24,7 @@ def query(polar):
     """Query something and return the results as a list"""
 
     def _query(q, **kwargs):
-        return list(r["bindings"] for r in polar.query(q, **kwargs))
+        return [r["bindings"] for r in polar.query(q, **kwargs)]
 
     return _query
 

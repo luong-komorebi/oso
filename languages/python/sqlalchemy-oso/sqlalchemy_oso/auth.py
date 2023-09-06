@@ -121,7 +121,4 @@ def authorize_model(
         else:
             combined_filter = combined_filter | filter
 
-    if not has_result:
-        return sql.false()
-
-    return combined_filter
+    return sql.false() if not has_result else combined_filter

@@ -319,8 +319,7 @@ class Host:
                     "class_id": class_id,
                 }
             }
-        term = {"value": val}
-        return term
+        return {"value": val}
 
     def to_python(self, value):
         """Convert a Polar term to a Python object."""
@@ -366,14 +365,14 @@ class Host:
             return Expression(operator, args)
         elif tag == "Pattern":
             pattern_tag = [*value[tag]][0]
-            if pattern_tag == "Instance":
-                instance = value[tag]["Instance"]
-                return Pattern(instance["tag"], instance["fields"]["fields"])
-            elif pattern_tag == "Dictionary":
+            if pattern_tag == "Dictionary":
                 dictionary = value[tag]["Dictionary"]
                 return Pattern(None, dictionary["fields"])
+            elif pattern_tag == "Instance":
+                instance = value[tag]["Instance"]
+                return Pattern(instance["tag"], instance["fields"]["fields"])
             else:
-                raise UnexpectedPolarTypeError("Pattern: " + value[tag])
+                raise UnexpectedPolarTypeError(f"Pattern: {value[tag]}")
 
         raise UnexpectedPolarTypeError(tag)
 

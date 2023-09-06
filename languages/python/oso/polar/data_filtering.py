@@ -22,22 +22,22 @@ def serialize_types(types, tmap):
     polar_types = {}
     for typ in types:
         tag, fields = typ.name, typ.fields
-        field_types = {}
-        for k, v in fields.items():
-            if isinstance(v, Relation):
-                field_types[k] = {
-                    "Relation": {
-                        "kind": v.kind,
-                        "other_class_tag": v.other_type,
-                        "my_field": v.my_field,
-                        "other_field": v.other_field,
-                    }
+        field_types = {
+            k: {
+                "Relation": {
+                    "kind": v.kind,
+                    "other_class_tag": v.other_type,
+                    "my_field": v.my_field,
+                    "other_field": v.other_field,
                 }
-            else:
-                field_types[k] = {
-                    "Base": {
-                        "class_tag": tmap[v].name,
-                    }
+            }
+            if isinstance(v, Relation)
+            else {
+                "Base": {
+                    "class_tag": tmap[v].name,
                 }
+            }
+            for k, v in fields.items()
+        }
         polar_types[tag] = field_types
     return polar_types

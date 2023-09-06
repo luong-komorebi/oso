@@ -59,8 +59,7 @@ def preprocess_and(
     new_expression = []
 
     for expression in expression.args:
-        maybe_expr = preprocess_expression(expression, variables)
-        if maybe_expr:
+        if maybe_expr := preprocess_expression(expression, variables):
             new_expression.append(maybe_expr)
 
     return Expression("And", new_expression)

@@ -6,8 +6,8 @@ from typing import List
 class Repository:
     name: str
 
-    def get_by_name(name):
-        return repos_db[name]
+    def get_by_name(self):
+        return repos_db[self]
 
 
 repos_db = {"gmail": Repository("gmail")}
